@@ -1,0 +1,14 @@
+name: Verify Environment Variables
+
+on:
+  pull_request:
+    branches: [dev]
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  verify-environment:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - uses: actions/checkout@v3
