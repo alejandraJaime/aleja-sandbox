@@ -1,8 +1,8 @@
 name: Verify Environment Variables
 
 on:
-  pull_request:
-    branches: [dev]
+  push:
+    branches: [vars-workflow]
   workflow_dispatch: # Allow manual triggers
 
 jobs:
