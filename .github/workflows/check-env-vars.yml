@@ -12,3 +12,41 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Check Environment Variables
+        run: |
+          # Read expected variables from YAML
+          EXPECTED_VARS=$(yq eval '.required_variables[]' secrets-vars-masterlist.yml)
+          EXPECTED_SECRETS=$(yq eval '.required_secrets[]' secrets-vars-masterlist.yml)
+
+          # Initialize error flag
+          ERROR=0
+
+          # Check environment variables
+          echo "Checking environment variables..."
+          while IFS= read -r var; do
+            if ! curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/environments/${{ env.GITHUB_ENVIRONMENT }}/variables" | \
+              jq -e ".variables[] | select(.name == \"$var\")" > /dev/null; then
+              echo "❌ Missing environment variable: $var"
+              ERROR=1
+            fi
+          done <<< "$EXPECTED_VARS"
+
+          # Check secrets
+          echo "Checking secrets..."
+          while IFS= read -r secret; do
+            if ! curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/environments/${{ env.GITHUB_ENVIRONMENT }}/secrets" | \
+              jq -e ".secrets[] | select(.name == \"$secret\")" > /dev/null; then
+              echo "❌ Missing secret: $secret"
+              ERROR=1
+            fi
+          done <<< "$EXPECTED_SECRETS"
+
+          # Exit with error if any variables are missing
+          if [ $ERROR -eq 1 ]; then
+            exit 1
+          fi
+
+          echo "✅ All required environment variables and secrets are present!"
