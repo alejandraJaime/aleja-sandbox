@@ -9,6 +9,8 @@ jobs:
   verify-environment:
     runs-on: ubuntu-latest
     environment: dev
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@v3
